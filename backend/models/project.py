@@ -16,6 +16,27 @@ class ProjectFeatures:
     total_spent_cd: Optional[float] = None
     total_spent_ca: Optional[float] = None
 
+    @property
+    def total_hours(self) -> Optional[float]:
+        """Total Hours = Engineering + Drafting + Manager/Reviewer hours."""
+        components = [self.engineering_hrs, self.drafting_hrs, self.manager_hrs]
+        valid = [c for c in components if c is not None]
+        return sum(valid) if valid else None
+
+    @property
+    def total_fee(self) -> Optional[float]:
+        """Total Fee = CD Fee + CA Fee."""
+        components = [self.cd_fee, self.ca_fee]
+        valid = [c for c in components if c is not None]
+        return sum(valid) if valid else None
+
+    @property
+    def total_spent(self) -> Optional[float]:
+        """Total Spent = Total Spent CD + Total Spent CA."""
+        components = [self.total_spent_cd, self.total_spent_ca]
+        valid = [c for c in components if c is not None]
+        return sum(valid) if valid else None
+
     def to_dict(self) -> dict:
         return {
             "total_sheets": self.total_sheets,
@@ -27,43 +48,38 @@ class ProjectFeatures:
             "sq_ft": self.sq_ft,
             "total_spent_cd": self.total_spent_cd,
             "total_spent_ca": self.total_spent_ca,
+            # Computed totals
+            "total_hours": self.total_hours,
+            "total_fee": self.total_fee,
+            "total_spent": self.total_spent,
         }
 
     def to_vector(self) -> list[float]:
-        """Convert features to a numeric vector for similarity computation."""
+        """Convert features to a numeric vector for similarity computation.
+
+        Uses combined totals for hours, fee, and spent.
+        """
         return [
             float(self.total_sheets or 0),
-            float(self.engineering_hrs or 0),
-            float(self.drafting_hrs or 0),
-            float(self.manager_hrs or 0),
-            float(self.cd_fee or 0),
-            float(self.ca_fee or 0),
+            float(self.total_hours or 0),
+            float(self.total_fee or 0),
             float(self.sq_ft or 0),
-            float(self.total_spent_cd or 0),
-            float(self.total_spent_ca or 0),
+            float(self.total_spent or 0),
         ]
 
     def get_provided_fields(self) -> list[str]:
-        """Return list of field names that have values."""
+        """Return list of field names that have values (using combined fields)."""
         fields = []
         if self.total_sheets is not None:
             fields.append("total_sheets")
-        if self.engineering_hrs is not None:
-            fields.append("engineering_hrs")
-        if self.drafting_hrs is not None:
-            fields.append("drafting_hrs")
-        if self.manager_hrs is not None:
-            fields.append("manager_hrs")
-        if self.cd_fee is not None:
-            fields.append("cd_fee")
-        if self.ca_fee is not None:
-            fields.append("ca_fee")
+        if self.total_hours is not None:
+            fields.append("total_hours")
+        if self.total_fee is not None:
+            fields.append("total_fee")
         if self.sq_ft is not None:
             fields.append("sq_ft")
-        if self.total_spent_cd is not None:
-            fields.append("total_spent_cd")
-        if self.total_spent_ca is not None:
-            fields.append("total_spent_ca")
+        if self.total_spent is not None:
+            fields.append("total_spent")
         return fields
 
 
@@ -111,27 +127,34 @@ class SearchResult:
 
 @dataclass
 class SearchRequest:
-    """Search request from the API."""
-    total_sheets: Optional[int] = None
-    engineering_hrs: Optional[float] = None
-    drafting_hrs: Optional[float] = None
-    manager_hrs: Optional[float] = None
-    cd_fee: Optional[float] = None
-    ca_fee: Optional[float] = None
+    """Search request from the API.
+
+    Accepts combined fields from UI:
+    - total_hours: Engineering + Drafting + Manager hours
+    - total_fee: SD + DD + CD fee
+    - total_spent: SD + DD + CD spent
+    """
     sq_ft: Optional[int] = None
-    total_spent_cd: Optional[float] = None
-    total_spent_ca: Optional[float] = None
+    total_hours: Optional[float] = None
+    total_fee: Optional[float] = None
+    total_spent: Optional[float] = None
     max_results: int = 5
 
     def to_features(self) -> ProjectFeatures:
+        """Convert search request to ProjectFeatures.
+
+        Maps combined fields to component fields for similarity matching.
+        Since we only have totals, we store them as the primary component
+        (engineering_hrs, cd_fee, total_spent_cd) for compatibility.
+        """
         return ProjectFeatures(
-            total_sheets=self.total_sheets,
-            engineering_hrs=self.engineering_hrs,
-            drafting_hrs=self.drafting_hrs,
-            manager_hrs=self.manager_hrs,
-            cd_fee=self.cd_fee,
-            ca_fee=self.ca_fee,
+            total_sheets=None,  # Not exposed in UI but used for training
+            engineering_hrs=self.total_hours,  # Store total in engineering field
+            drafting_hrs=None,
+            manager_hrs=None,
+            cd_fee=self.total_fee,  # Store total in cd_fee field
+            ca_fee=None,
             sq_ft=self.sq_ft,
-            total_spent_cd=self.total_spent_cd,
-            total_spent_ca=self.total_spent_ca,
+            total_spent_cd=self.total_spent,  # Store total in spent_cd field
+            total_spent_ca=None,
         )

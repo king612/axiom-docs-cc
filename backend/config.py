@@ -25,17 +25,13 @@ DEFAULT_MAX_RESULTS = 5
 MAX_RESULTS_LIMIT = 10
 MIN_RESULTS = 1
 
-# Feature weights (initial values, can be tuned)
+# Feature weights for combined fields (initial values, can be tuned)
 FEATURE_WEIGHTS = {
-    "total_sheets": 1.0,
-    "engineering_hrs": 1.0,
-    "drafting_hrs": 1.0,
-    "manager_hrs": 1.0,
-    "cd_fee": 1.0,
-    "ca_fee": 1.0,
+    "total_sheets": 1.0,  # Used for training but not in UI
+    "total_hours": 1.0,   # Engineering + Drafting + Manager hours
+    "total_fee": 1.0,     # SD + DD + CD fee
     "sq_ft": 1.0,
-    "total_spent_cd": 1.0,
-    "total_spent_ca": 1.0,
+    "total_spent": 1.0,   # SD + DD + CD spent
 }
 
 # Recency bias weight (0-1, higher = more recent preference)

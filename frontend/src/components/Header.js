@@ -6,17 +6,17 @@ const LOGO_URL = 'https://axiompllc.com/wp-content/uploads/2021/08/Axiom-logo-co
 
 function Header() {
   return (
-    <header className="bg-white py-4 mb-4 border-bottom">
+    <header className="bg-white py-2 mb-3 border-bottom">
       <Container className="text-center">
         <img
           src={LOGO_URL}
           alt="Axiom PLLC Logo"
-          className="company-logo mb-3"
+          className="company-logo mb-1"
           onError={(e) => {
             e.target.style.display = 'none';
           }}
         />
-        <h1 className="header-title">Axiom Intelligent Proposal Assistant</h1>
+        <h1 className="header-title">Intelligent Proposal Assistant</h1>
       </Container>
     </header>
   );

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -12,15 +12,10 @@ const api = axios.create({
 /**
  * Search for similar projects based on input parameters
  * @param {Object} params - Search parameters
- * @param {number} [params.total_sheets] - Total number of sheets
- * @param {number} [params.engineering_hrs] - Total engineering hours
- * @param {number} [params.drafting_hrs] - Total drafting hours
- * @param {number} [params.manager_hrs] - Total manager/reviewer hours
- * @param {number} [params.cd_fee] - CD fee
- * @param {number} [params.ca_fee] - CA fee
  * @param {number} [params.sq_ft] - Square footage
- * @param {number} [params.total_spent_cd] - Total dollars spent on CD
- * @param {number} [params.total_spent_ca] - Total dollars spent on CA
+ * @param {number} [params.total_hours] - Total hours (Engineering + Drafting + Manager)
+ * @param {number} [params.total_fee] - Total fee (SD + DD + CD)
+ * @param {number} [params.total_spent] - Total spent (SD + DD + CD)
  * @param {number} [params.max_results] - Maximum number of results (1-10)
  * @returns {Promise<Object>} Search results
  */

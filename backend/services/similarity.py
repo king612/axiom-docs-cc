@@ -38,6 +38,8 @@ class SimilarityEngine:
         """
         Compute min/max ranges for each feature from the stored data.
 
+        Uses combined fields: total_hours, total_fee, total_spent.
+
         Returns:
             Dictionary with min/max for each feature
         """
@@ -46,23 +48,51 @@ class SimilarityEngine:
 
         ranges = {
             "total_sheets": {"min": float("inf"), "max": float("-inf")},
-            "engineering_hrs": {"min": float("inf"), "max": float("-inf")},
-            "drafting_hrs": {"min": float("inf"), "max": float("-inf")},
-            "manager_hrs": {"min": float("inf"), "max": float("-inf")},
-            "cd_fee": {"min": float("inf"), "max": float("-inf")},
-            "ca_fee": {"min": float("inf"), "max": float("-inf")},
+            "total_hours": {"min": float("inf"), "max": float("-inf")},
+            "total_fee": {"min": float("inf"), "max": float("-inf")},
             "sq_ft": {"min": float("inf"), "max": float("-inf")},
-            "total_spent_cd": {"min": float("inf"), "max": float("-inf")},
-            "total_spent_ca": {"min": float("inf"), "max": float("-inf")},
+            "total_spent": {"min": float("inf"), "max": float("-inf")},
         }
 
         if results["metadatas"]:
             for metadata in results["metadatas"]:
-                for feature in ranges:
-                    value = metadata.get(feature)
-                    if value is not None:
-                        ranges[feature]["min"] = min(ranges[feature]["min"], value)
-                        ranges[feature]["max"] = max(ranges[feature]["max"], value)
+                # Compute combined totals from stored component fields
+                # total_hours = engineering + drafting + manager
+                hours_components = [
+                    metadata.get("engineering_hrs"),
+                    metadata.get("drafting_hrs"),
+                    metadata.get("manager_hrs"),
+                ]
+                valid_hours = [h for h in hours_components if h is not None]
+                if valid_hours:
+                    total_hours = sum(valid_hours)
+                    ranges["total_hours"]["min"] = min(ranges["total_hours"]["min"], total_hours)
+                    ranges["total_hours"]["max"] = max(ranges["total_hours"]["max"], total_hours)
+
+                # total_fee = cd_fee + ca_fee
+                fee_components = [metadata.get("cd_fee"), metadata.get("ca_fee")]
+                valid_fees = [f for f in fee_components if f is not None]
+                if valid_fees:
+                    total_fee = sum(valid_fees)
+                    ranges["total_fee"]["min"] = min(ranges["total_fee"]["min"], total_fee)
+                    ranges["total_fee"]["max"] = max(ranges["total_fee"]["max"], total_fee)
+
+                # total_spent = total_spent_cd + total_spent_ca
+                spent_components = [metadata.get("total_spent_cd"), metadata.get("total_spent_ca")]
+                valid_spent = [s for s in spent_components if s is not None]
+                if valid_spent:
+                    total_spent = sum(valid_spent)
+                    ranges["total_spent"]["min"] = min(ranges["total_spent"]["min"], total_spent)
+                    ranges["total_spent"]["max"] = max(ranges["total_spent"]["max"], total_spent)
+
+                # Simple fields
+                if metadata.get("total_sheets") is not None:
+                    ranges["total_sheets"]["min"] = min(ranges["total_sheets"]["min"], metadata["total_sheets"])
+                    ranges["total_sheets"]["max"] = max(ranges["total_sheets"]["max"], metadata["total_sheets"])
+
+                if metadata.get("sq_ft") is not None:
+                    ranges["sq_ft"]["min"] = min(ranges["sq_ft"]["min"], metadata["sq_ft"])
+                    ranges["sq_ft"]["max"] = max(ranges["sq_ft"]["max"], metadata["sq_ft"])
 
         # Handle case where no data exists
         for feature in ranges:
@@ -86,6 +116,27 @@ class SimilarityEngine:
 
         return (value - min_val) / (max_val - min_val)
 
+    def _get_stored_total(self, metadata: dict, field: str) -> Optional[float]:
+        """Get a combined total value from stored metadata."""
+        if field == "total_hours":
+            components = [
+                metadata.get("engineering_hrs"),
+                metadata.get("drafting_hrs"),
+                metadata.get("manager_hrs"),
+            ]
+            valid = [c for c in components if c is not None]
+            return sum(valid) if valid else None
+        elif field == "total_fee":
+            components = [metadata.get("cd_fee"), metadata.get("ca_fee")]
+            valid = [c for c in components if c is not None]
+            return sum(valid) if valid else None
+        elif field == "total_spent":
+            components = [metadata.get("total_spent_cd"), metadata.get("total_spent_ca")]
+            valid = [c for c in components if c is not None]
+            return sum(valid) if valid else None
+        else:
+            return metadata.get(field)
+
     def _compute_feature_similarity(
         self,
         query_features: ProjectFeatures,
@@ -94,7 +145,7 @@ class SimilarityEngine:
         """
         Compute feature-based similarity between query and stored project.
 
-        Uses weighted normalized difference for each feature.
+        Uses weighted normalized difference for combined fields.
 
         Returns:
             Similarity score between 0 and 1
@@ -106,7 +157,7 @@ class SimilarityEngine:
 
         for field in provided_fields:
             query_value = getattr(query_features, field)
-            stored_value = stored_metadata.get(field)
+            stored_value = self._get_stored_total(stored_metadata, field)
 
             if query_value is None or stored_value is None:
                 continue
@@ -254,7 +305,7 @@ class SimilarityEngine:
 
         metadata = project["metadata"]
 
-        # Create features from stored metadata
+        # Create features from stored metadata (uses component fields)
         features = ProjectFeatures(
             total_sheets=metadata.get("total_sheets"),
             engineering_hrs=metadata.get("engineering_hrs"),
@@ -266,6 +317,7 @@ class SimilarityEngine:
             total_spent_cd=metadata.get("total_spent_cd"),
             total_spent_ca=metadata.get("total_spent_ca"),
         )
+        # Note: ProjectFeatures will compute totals from components automatically
 
         # Search and filter out the reference project
         results = self.search(features, max_results=max_results + 1)

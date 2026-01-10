@@ -11,6 +11,7 @@ chromadb>=0.4.0
 
 # Embeddings
 sentence-transformers>=2.2.0
+numpy<2  # Required for PyTorch compatibility
 
 # LlamaIndex
 llama-index>=0.10.0

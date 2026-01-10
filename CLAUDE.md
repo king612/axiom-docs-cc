@@ -89,7 +89,7 @@ cp .env.example .env
 # Ingest data into vector store (run once, or after data changes)
 python scripts/ingest_data.py --clear
 
-# Run backend development server (port 5000)
+# Run backend development server (port 5001, changed from 5000 to avoid macOS AirPlay conflict)
 python -m backend.app
 ```
 
@@ -102,7 +102,7 @@ npm install
 npm start
 ```
 
-### API Endpoints (http://localhost:5000)
+### API Endpoints (http://localhost:5001)
 - `GET  /api/health` - Health check
 - `GET  /api/stats` - Vector store statistics
 - `POST /api/search` - Search for similar projects

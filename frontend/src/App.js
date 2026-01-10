@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Alert, Badge } from 'react-bootstrap';
+import { Container, Alert, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import Header from './components/Header';
 import SearchForm from './components/SearchForm';
 import ResultsList from './components/ResultsList';
@@ -70,7 +70,7 @@ function App() {
           <Alert variant="warning" className="mb-4">
             <Alert.Heading>Backend Not Connected</Alert.Heading>
             <p className="mb-0">
-              Unable to connect to the backend server. Please ensure the Flask server is running on port 5000.
+              Unable to connect to the backend server. Please ensure the Flask server is running on port 5001.
             </p>
             <hr />
             <p className="mb-0">
@@ -79,16 +79,35 @@ function App() {
           </Alert>
         )}
 
-        {/* Stats Badge */}
+        {/* Stats Info */}
         {stats && stats.total_documents > 0 && (
-          <div className="mb-3 text-end">
-            <Badge bg="info" className="me-2">
-              {stats.total_documents.toLocaleString()} projects indexed
-            </Badge>
-            {stats.documents_with_training_labels > 0 && (
-              <Badge bg="secondary">
-                {stats.documents_with_training_labels.toLocaleString()} with training data
+          <div className="mb-2 text-end" style={{ fontSize: '0.8rem' }}>
+            <OverlayTrigger
+              placement="bottom"
+              overlay={
+                <Tooltip>
+                  Total historical bid spreadsheets indexed from 2016-2024
+                </Tooltip>
+              }
+            >
+              <Badge bg="info" className="me-2" style={{ cursor: 'help' }}>
+                {stats.total_documents.toLocaleString()} indexed
               </Badge>
+            </OverlayTrigger>
+            {stats.documents_with_training_labels > 0 && (
+              <OverlayTrigger
+                placement="bottom"
+                overlay={
+                  <Tooltip>
+                    Projects where experts noted similar past bids in the spreadsheet.
+                    Not all spreadsheets have this data filled in.
+                  </Tooltip>
+                }
+              >
+                <Badge bg="secondary" style={{ cursor: 'help' }}>
+                  {stats.documents_with_training_labels.toLocaleString()} with training labels
+                </Badge>
+              </OverlayTrigger>
             )}
           </div>
         )}
