@@ -36,19 +36,16 @@ Proposal builders currently manually search through years of historical bid spre
 
 **Input Fields** (all optional - partial searches supported):
 
-| Field | Type | Format | Required |
-|-------|------|--------|----------|
-| Total sheets | Integer | Numeric input | No |
-| Total Engineering Hrs. | Float | Decimal input | No |
-| Total Drafting Hrs. | Float | Decimal input | No |
-| Total Manager/Reviewer Hrs. | Float | Decimal input | No |
-| CD Fee | Currency | Dollar format | No |
-| CA Fee | Currency | Dollar format | No |
-| SQ FT | Integer | Numeric input | No |
-| Total $ spent CD | Currency | Dollar format | No |
-| Total $ spent CA | Currency | Dollar format | No |
+| Field | Type | Format | Notes |
+|-------|------|--------|-------|
+| Square Feet | Integer | Numeric input | Building square footage |
+| Total Hours | Float | Decimal input | Engineering + Drafting + Manager hours |
+| Total Fee | Currency | Dollar format ($) | SD + DD + CD fees combined |
+| Total Spent | Currency | Dollar format ($) | SD + DD + CD spent combined |
 
 Users may leave fields blank; the system will match based on provided fields only.
+
+**Note**: The underlying data model stores individual components (Engineering Hours, Drafting Hours, Manager Hours, CD Fee, CA Fee, etc.) which are summed to compute the totals used for similarity matching. Total Sheets is also extracted and used for training but not exposed in the UI.
 
 **Result Limit Control**:
 - Dropdown: "Maximum historical bids"
@@ -117,6 +114,8 @@ Project IDs listed reference historical bids selected by domain experts as good 
 ### MVP Scope
 - Single-user (no authentication)
 - Local deployment for development/testing
+- Backend: Flask API on port 5001
+- Frontend: React on port 3000
 - Internet access available for API calls
 
 ### Quality vs Performance
