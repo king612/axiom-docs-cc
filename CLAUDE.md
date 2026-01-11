@@ -9,8 +9,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Technology Stack
 
 - **Python**: 3.12
-- **Backend**: Flask or FastAPI (simple, minimal dependencies)
-- **Frontend**: React (JavaScript, not TypeScript), Bootstrap styling only
+- **Backend**: Flask (port 5001)
+- **Frontend**: React (JavaScript, not TypeScript), Bootstrap styling only (port 3000)
 - **Vector Database**: ChromaDB
 - **Embeddings**: Local (sentence-transformers)
 - **LLM API**: Anthropic Claude (API key available)
@@ -46,8 +46,16 @@ Project IDs in these tables correspond to historical bids chosen by domain exper
 
 ## Key Fields for Similarity Matching
 
-Extract from first tab of spreadsheets:
-- `total # of shts.` (Total sheets - integer)
+### UI Input Fields (simplified)
+The search form accepts 4 combined fields:
+- **Square Feet** - Building square footage
+- **Total Hours** - Engineering + Drafting + Manager/Reviewer hours
+- **Total Fee** - SD + DD + CD fees combined
+- **Total Spent** - SD + DD + CD spent combined
+
+### Extracted from Spreadsheets (first tab)
+The ingestion pipeline extracts these individual fields:
+- `total # of shts.` (Total sheets - integer) - used for training, not in UI
 - `Total Engineering Hrs.` (float)
 - `Total Drafting Hrs.` (float)
 - `Total Manager/Reviewer Hrs.` (float)
@@ -57,7 +65,7 @@ Extract from first tab of spreadsheets:
 - `Total $ spent CD` (currency)
 - `Total $ spent CA` (currency)
 
-Fields may be missing in some spreadsheets. Favor more recent bids during training.
+Fields may be missing in some spreadsheets. The similarity engine computes totals from available components and favors more recent bids.
 
 ## MVP Requirements
 
